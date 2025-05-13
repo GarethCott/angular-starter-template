@@ -145,6 +145,12 @@ export class ApolloGraphqlService {
    * @param errors Array of GraphQL errors
    */
   handleGraphQLErrors(operation: string, errors: any[]): void {
+    // Handle case of null or empty errors array
+    if (!errors || errors.length === 0) {
+      console.warn(`Empty errors array passed to handleGraphQLErrors for operation: ${operation}`);
+      return;
+    }
+    
     // Log errors to monitoring service
     errors.forEach(error => {
       console.error(`[GraphQL error]: Operation: ${operation}, Message: ${error.message}`);
@@ -187,6 +193,9 @@ export class ApolloGraphqlService {
           if (result.loading) {
             // Update loading state
             this.stateFacade.setLoading(true);
+          } else {
+            // Set loading to false when we have a result
+            this.stateFacade.setLoading(false);
           }
         }),
         map(result => {
@@ -201,6 +210,8 @@ export class ApolloGraphqlService {
         }),
         catchError(error => {
           this.handleGraphQLErrors(operationName, [error]);
+          // Set loading to false on error
+          this.stateFacade.setLoading(false);
           return throwError(() => error);
         }),
         finalize(() => {
@@ -235,10 +246,14 @@ export class ApolloGraphqlService {
         if (!result.data) {
           throw new Error(`No data returned for mutation: ${operationName}`);
         }
+        // Set loading to false on success
+        this.stateFacade.setLoading(false);
         return result.data;
       }),
       catchError(error => {
         this.handleGraphQLErrors(operationName, [error]);
+        // Set loading to false on error
+        this.stateFacade.setLoading(false);
         return throwError(() => error);
       }),
       finalize(() => {

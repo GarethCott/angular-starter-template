@@ -70,7 +70,7 @@ This document outlines the improvements implemented in our Angular starter templ
 > **Note:** For detailed information about the state management system, see the [STATE_MANAGEMENT.md](./STATE_MANAGEMENT.md) documentation.
 
 ### 2. Testing
-- ⚠️ Add unit tests for services, guards, and components
+- ✅ Add unit tests for services, guards, and components
 - ⚠️ Add integration tests for GraphQL operations
 - ⚠️ Add E2E tests for user flows
 

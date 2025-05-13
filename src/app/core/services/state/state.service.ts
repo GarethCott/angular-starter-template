@@ -103,7 +103,30 @@ export class StateService {
    * Reset the state to initial values
    */
   resetState(): void {
-    this.state$.next(this.initialState);
+    // Create a fresh copy of the initial state to avoid reference issues
+    const freshInitialState = {
+      user: {
+        isAuthenticated: false
+      },
+      ui: {
+        theme: 'light',
+        notifications: [],
+        isLoading: false,
+        lastViewedPage: '',
+        sidebarCollapsed: false
+      },
+      preferences: {
+        theme: 'light',
+        language: 'en',
+        timezone: 'UTC',
+        notifications: {
+          email: true,
+          push: true,
+          inApp: true
+        }
+      }
+    };
+    this.state$.next(freshInitialState);
   }
 
   /**
@@ -112,12 +135,25 @@ export class StateService {
    * @param userData Optional user data
    */
   setAuthState(isAuthenticated: boolean, userData?: { userId?: string, username?: string, roles?: string[] }): void {
-    this.updateState({
-      user: {
-        isAuthenticated,
-        ...userData
-      }
-    });
+    if (isAuthenticated) {
+      this.updateState({
+        user: {
+          isAuthenticated,
+          ...userData
+        }
+      });
+    } else {
+      // When setting to unauthenticated, explicitly clear all user data
+      this.updateState({
+        user: {
+          isAuthenticated: false,
+          userId: undefined,
+          username: undefined,
+          roles: undefined,
+          profile: undefined
+        }
+      });
+    }
   }
 
   /**
