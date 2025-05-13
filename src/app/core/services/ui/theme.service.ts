@@ -1,7 +1,7 @@
 import { Injectable, inject, PLATFORM_ID, Renderer2, RendererFactory2 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { StateFacadeService } from './state-facade.service';
+import { Observable } from 'rxjs';
+import { StateFacadeService } from '../state/state-facade.service';
 import { tap } from 'rxjs/operators';
 
 @Injectable({

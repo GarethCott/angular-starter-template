@@ -3,15 +3,15 @@ import { Apollo, ApolloBase } from 'apollo-angular';
 import { HttpLink } from 'apollo-angular/http';
 import { setContext } from '@apollo/client/link/context';
 import { ApolloClientOptions, InMemoryCache, split } from '@apollo/client/core';
-import { environment } from '../../../environments/environment';
 import { WatchQueryOptions, OperationVariables } from '@apollo/client/core';
 import { Observable, throwError } from 'rxjs';
 import { map, catchError, finalize, tap } from 'rxjs/operators';
-import { AmplifyService } from './amplify.service';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { createClient } from 'graphql-ws';
 import { getMainDefinition } from '@apollo/client/utilities';
-import { StateFacadeService } from './state-facade.service';
+import { AmplifyService } from '../auth/amplify.service';
+import { StateFacadeService } from '../state/state-facade.service';
+import { environment } from '../../../../environments/environment';
 
 /**
  * Service for handling Apollo GraphQL operations.

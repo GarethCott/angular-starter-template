@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ThemeService } from '../../../core/services/theme.service';
-import { StateFacadeService } from '../../../core/services/state-facade.service';
+import { ThemeService } from '../../../core/services/ui/theme.service';
+import { StateFacadeService } from '../../../core/services/state/state-facade.service';
 import { Subscription } from 'rxjs';
 
 @Component({

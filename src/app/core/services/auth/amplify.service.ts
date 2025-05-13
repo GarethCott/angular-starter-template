@@ -2,9 +2,9 @@ import { Injectable } from '@angular/core';
 import { Amplify } from 'aws-amplify';
 import { signIn, signUp, confirmSignUp, signOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 import { Observable, from } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { StateFacadeService } from './state-facade.service';
 import { tap } from 'rxjs/operators';
+import { StateFacadeService } from '../state/state-facade.service';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'

@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { StateFacadeService } from '../../../core/services/state-facade.service';
+import { StateFacadeService } from '../../../core/services/state/state-facade.service';
 
 @Component({
   selector: 'app-loading-indicator',

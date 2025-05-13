@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { CanActivate, Router, UrlTree } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map, take } from 'rxjs/operators';
-import { AmplifyService } from '../services/amplify.service';
+import { AmplifyService } from '../services/auth/amplify.service';
 
 @Injectable({
   providedIn: 'root'

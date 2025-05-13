@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AmplifyService } from '../../../core/services/amplify.service';
+import { AmplifyService } from '../../../core/services/auth/amplify.service';
 
 @Component({
   selector: 'app-login',

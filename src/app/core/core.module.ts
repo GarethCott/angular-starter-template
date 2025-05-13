@@ -2,9 +2,9 @@ import { NgModule, Optional, SkipSelf } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 
-import { AmplifyService } from './services/amplify.service';
-import { ApolloGraphqlService } from './services/apollo-graphql.service';
-import { UserService } from './services/user.service';
+// Import from barrel files
+import { AmplifyService } from './services/auth';
+import { ApolloGraphqlService, UserService } from './services/api';
 import { AuthGuard } from './guards/auth.guard';
 import { RoleGuard } from './guards/role.guard';
 import { AuthInterceptor } from './interceptors/auth.interceptor';

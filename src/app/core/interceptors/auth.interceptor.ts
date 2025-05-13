@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
 import { Observable, from } from 'rxjs';
-import { AmplifyService } from '../services/amplify.service';
+import { AmplifyService } from '../services/auth/amplify.service';
 import { switchMap } from 'rxjs/operators';
 
 @Injectable()

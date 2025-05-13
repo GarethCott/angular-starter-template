@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { AmplifyService } from '../../core/services/amplify.service';
+import { AmplifyService } from '../../core/services/auth/amplify.service';
 import { CommonModule } from '@angular/common';
 import { PageLayoutComponent, ContentCardComponent } from '../../shared/components/layout';
 

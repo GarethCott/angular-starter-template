@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ToastService, Toast, ToastPosition } from '../../services/toast.service';
@@ -8,18 +8,30 @@ import { ToastService, Toast, ToastPosition } from '../../services/toast.service
   standalone: true,
   imports: [CommonModule],
   templateUrl: './toast.component.html',
-  styleUrls: ['./toast.component.scss']
+  styleUrls: ['./toast.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToastComponent implements OnInit, OnDestroy {
   toasts: Toast[] = [];
   private subscription: Subscription | null = null;
+  private groupedToastsCache: { [key in ToastPosition]?: Toast[] } | null = null;
 
-  constructor(private toastService: ToastService) { }
+  constructor(
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit(): void {
     // Subscribe to toasts from the service (which now uses state management)
     this.subscription = this.toastService.toasts$.subscribe(toasts => {
-      this.toasts = toasts;
+      // Always invalidate cache when toasts change
+      this.groupedToastsCache = null;
+      
+      // Only update and trigger change detection if the toasts array actually changed
+      if (JSON.stringify(this.toasts) !== JSON.stringify(toasts)) {
+        this.toasts = toasts;
+        this.cdr.markForCheck(); // Explicitly mark for change detection
+      }
     });
   }
 
@@ -93,9 +105,15 @@ export class ToastComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Group toasts by position
+   * Group toasts by position with caching to prevent unnecessary recalculations
    */
   getGroupedToasts(): { [key in ToastPosition]?: Toast[] } {
+    // Use cached result if available and toasts haven't changed
+    if (this.groupedToastsCache) {
+      return this.groupedToastsCache;
+    }
+    
+    // Otherwise, calculate the grouped toasts
     const grouped: { [key in ToastPosition]?: Toast[] } = {};
     
     this.toasts.forEach(toast => {
@@ -105,6 +123,8 @@ export class ToastComponent implements OnInit, OnDestroy {
       grouped[toast.position]!.push(toast);
     });
     
+    // Cache the result
+    this.groupedToastsCache = grouped;
     return grouped;
   }
 } 

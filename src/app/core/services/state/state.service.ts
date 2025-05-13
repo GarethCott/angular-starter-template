@@ -1,36 +1,15 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map, distinctUntilChanged } from 'rxjs/operators';
-
-/**
- * Global application state interface
- */
-export interface AppState {
-  user: {
-    isAuthenticated: boolean;
-    userId?: string;
-    username?: string;
-    roles?: string[];
-  };
-  ui: {
-    theme: string;
-    notifications: Notification[];
-    isLoading: boolean;
-    lastViewedPage: string;
-  };
-  [key: string]: any; // Allow for dynamic state slices
-}
-
-/**
- * Notification interface for app-wide notifications
- */
-export interface Notification {
-  id: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  timestamp: number;
-  read: boolean;
-}
+import { 
+  AppState, 
+  Notification, 
+  UserState, 
+  UIState, 
+  PreferencesState,
+  FiltersState
+} from '../../models/state.model';
+import { RouterState } from './route-state.service';
 
 /**
  * Global State Management Service
@@ -49,7 +28,18 @@ export class StateService {
       theme: 'light',
       notifications: [],
       isLoading: false,
-      lastViewedPage: ''
+      lastViewedPage: '',
+      sidebarCollapsed: false
+    },
+    preferences: {
+      theme: 'light',
+      language: 'en',
+      timezone: 'UTC',
+      notifications: {
+        email: true,
+        push: true,
+        inApp: true
+      }
     }
   };
 
@@ -63,6 +53,10 @@ export class StateService {
       this.updateState({
         ui: {
           ...this.getCurrentState().ui,
+          theme: storedTheme
+        },
+        preferences: {
+          ...this.getCurrentState().preferences!,
           theme: storedTheme
         }
       });
@@ -136,6 +130,10 @@ export class StateService {
       ui: {
         ...this.getCurrentState().ui,
         theme
+      },
+      preferences: {
+        ...this.getCurrentState().preferences!,
+        theme
       }
     });
   }
@@ -152,16 +150,18 @@ export class StateService {
    * Add a notification
    * @param message Notification message
    * @param type Notification type
+   * @param metadata Optional metadata for the notification
    * @returns The created notification
    */
-  addNotification(message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info'): Notification {
+  addNotification(message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info', metadata?: any): Notification {
     const notifications = [...this.getCurrentState().ui.notifications];
     const newNotification: Notification = {
       id: Date.now().toString(),
       message,
       type,
       timestamp: Date.now(),
-      read: false
+      read: false,
+      metadata
     };
 
     this.updateState({
@@ -254,29 +254,74 @@ export class StateService {
   }
 
   /**
-   * Helper method to deep merge objects
+   * Toggle sidebar collapsed state
+   */
+  toggleSidebar(): void {
+    const currentState = this.getCurrentState();
+    const currentlyCollapsed = currentState.ui.sidebarCollapsed ?? false;
+    
+    this.updateState({
+      ui: {
+        ...currentState.ui,
+        sidebarCollapsed: !currentlyCollapsed
+      }
+    });
+  }
+
+  /**
+   * Get sidebar collapsed state
+   * @returns Observable of the sidebar collapsed state
+   */
+  getSidebarCollapsed(): Observable<boolean> {
+    return this.select(state => state.ui.sidebarCollapsed ?? false);
+  }
+
+  /**
+   * Update user preferences
+   * @param preferences Partial preferences to update
+   */
+  updatePreferences(preferences: Partial<PreferencesState>): void {
+    this.updateState({
+      preferences: {
+        ...this.getCurrentState().preferences!,
+        ...preferences
+      }
+    });
+  }
+
+  /**
+   * Get user preferences
+   * @returns Observable of user preferences
+   */
+  getPreferences(): Observable<PreferencesState | undefined> {
+    return this.select(state => state.preferences);
+  }
+
+  /**
+   * Deep merge two objects
    * @param target Target object
-   * @param source Source object to merge
-   * @returns New merged object
+   * @param source Source object to merge into target
+   * @returns Merged object
    */
   private deepMerge(target: any, source: any): any {
-    const output = { ...target };
-    
-    if (isObject(target) && isObject(source)) {
-      Object.keys(source).forEach(key => {
-        if (isObject(source[key])) {
-          if (!(key in target)) {
-            Object.assign(output, { [key]: source[key] });
-          } else {
-            output[key] = this.deepMerge(target[key], source[key]);
-          }
-        } else {
-          Object.assign(output, { [key]: source[key] });
-        }
-      });
+    if (!isObject(target) || !isObject(source)) {
+      return source;
     }
-    
-    return output;
+
+    Object.keys(source).forEach(key => {
+      const targetValue = target[key];
+      const sourceValue = source[key];
+
+      if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
+        target[key] = sourceValue;
+      } else if (isObject(targetValue) && isObject(sourceValue)) {
+        target[key] = this.deepMerge({ ...targetValue }, sourceValue);
+      } else {
+        target[key] = sourceValue;
+      }
+    });
+
+    return target;
   }
 }
 

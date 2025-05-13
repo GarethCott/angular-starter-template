@@ -2,9 +2,10 @@ import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map, tap, catchError, switchMap } from 'rxjs/operators';
 import { ApolloGraphqlService } from './apollo-graphql.service';
-import { StateFacadeService } from './state-facade.service';
-import { User } from '../models/user.model';
-import { GET_USER, LIST_USERS, CREATE_USER, UPDATE_USER, DELETE_USER } from '../../graphql/graphql.schema';
+
+import { User } from '../../models/user.model';
+import { StateFacadeService } from '../state/state-facade.service';
+import { CREATE_USER, DELETE_USER, GET_USER, LIST_USERS, UPDATE_USER } from '../../../graphql/graphql.schema';
 
 @Injectable({
   providedIn: 'root'
