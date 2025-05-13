@@ -29,7 +29,7 @@ import { ContainerComponent, ContentCardComponent } from '../../shared/component
 
         <!-- Main Content -->
         <main class="min-h-screen py-6">
-          <app-container [size]="'lg'" [padding]="'md'">
+          <app-container [size]="'full'" [padding]="'md'">
             <!-- Router Outlet -->
             <app-content-card>
               <router-outlet></router-outlet>

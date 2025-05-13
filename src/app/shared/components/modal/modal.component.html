@@ -1,0 +1,46 @@
+<!-- Dialog-based modal (recommended daisyUI approach) -->
+<dialog 
+  [attr.id]="id" 
+  class="modal"
+  [class.modal-open]="isOpen"
+  #modalDialog
+>
+  <div class="modal-box" [class]="getSizeClass()">
+    <!-- Modal header -->
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-bold text-lg">{{ title }}</h3>
+      <button 
+        *ngIf="showCloseButton" 
+        class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" 
+        (click)="close()"
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- Modal body -->
+    <div class="mb-4">
+      <ng-container *ngIf="modalBodyTemplate; else defaultContent">
+        <ng-container *ngTemplateOutlet="modalBodyTemplate"></ng-container>
+      </ng-container>
+      <ng-template #defaultContent>
+        <ng-content select="[modalBody]"></ng-content>
+      </ng-template>
+    </div>
+
+    <!-- Modal footer -->
+    <div class="modal-action" *ngIf="!hideFooter">
+      <ng-container *ngIf="modalFooterTemplate; else defaultFooter">
+        <ng-container *ngTemplateOutlet="modalFooterTemplate"></ng-container>
+      </ng-container>
+      <ng-template #defaultFooter>
+        <ng-content select="[modalFooter]"></ng-content>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Backdrop to close modal when clicked outside if enabled -->
+  <form method="dialog" class="modal-backdrop" *ngIf="closeOnBackdropClick">
+    <button (click)="close()">close</button>
+  </form>
+</dialog> 

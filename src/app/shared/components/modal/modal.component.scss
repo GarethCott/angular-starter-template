@@ -1,0 +1,67 @@
+// Modal size customizations
+:host ::ng-deep {
+  .modal-box {
+    max-height: 90vh;
+    overflow-y: auto;
+    
+    // Custom size variants - these should supplement daisyUI's built-in sizes
+    &.modal-xs {
+      max-width: 20rem;
+    }
+    
+    &.modal-sm {
+      max-width: 24rem;
+    }
+    
+    &.modal-lg {
+      max-width: 42rem;
+    }
+    
+    &.modal-xl {
+      max-width: 56rem;
+      width: 90%;
+    }
+  }
+  
+  // Animation enhancements
+  .modal {
+    &.modal-open .modal-box {
+      animation: modal-pop 0.3s ease-out;
+    }
+  }
+  
+  // Backdrop styling
+  .modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+  }
+  
+  // Footer styling
+  .modal-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding-top: 1rem;
+  }
+  
+  // Form button inside backdrop should be invisible but functional
+  .modal-backdrop button {
+    display: none;
+  }
+}
+
+// Animation keyframes
+@keyframes modal-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Ensure the modal is visible when opened programmatically
+dialog.modal[open] {
+  opacity: 1;
+  pointer-events: auto;
+} 

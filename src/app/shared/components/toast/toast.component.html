@@ -1,0 +1,20 @@
+<!-- Toast containers for each position -->
+<ng-container *ngFor="let positionGroup of getGroupedToasts() | keyvalue">
+  <div class="toast" [ngClass]="getToastPositionClasses(positionGroup.key)">
+    <!-- Individual toast messages -->
+    <div *ngFor="let toast of positionGroup.value" 
+         class="alert"
+         [ngClass]="getAlertClass(toast.type)">
+      <!-- Icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 h-6 w-6">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getIconPath(toast.type)"></path>
+      </svg>
+      
+      <!-- Simple message structure like daisyUI example -->
+      <span>{{ toast.title ? toast.title + ': ' : '' }}{{ toast.message }}</span>
+      
+      <!-- Close button (optional) -->
+      <button *ngIf="toast.showClose" class="btn btn-sm btn-circle btn-ghost" (click)="remove(toast.id)">✕</button>
+    </div>
+  </div>
+</ng-container> 
