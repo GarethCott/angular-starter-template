@@ -1,6 +1,8 @@
 import { Injectable, inject, PLATFORM_ID, Renderer2, RendererFactory2 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { StateFacadeService } from './state-facade.service';
+import { tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -22,38 +24,37 @@ export class ThemeService {
     "dim", "nord", "sunset", "caramellatte", "abyss", "silk"
   ];
   
-  // Theme state with BehaviorSubject for reactivity
-  private _currentTheme = new BehaviorSubject<string>("angular");
-  
   // Observable for components to subscribe to
-  public currentTheme$ = this._currentTheme.asObservable();
+  public currentTheme$: Observable<string>;
   
-  constructor(rendererFactory: RendererFactory2) {
+  constructor(
+    rendererFactory: RendererFactory2,
+    private stateFacade: StateFacadeService
+  ) {
     this.renderer = rendererFactory.createRenderer(null, null);
     
+    // Get theme from state and apply it when it changes
+    this.currentTheme$ = this.stateFacade.getTheme().pipe(
+      tap(theme => {
+        if (this._availableThemes.includes(theme)) {
+          this.applyTheme(theme);
+        } else {
+          // Fall back to default theme if invalid
+          const defaultTheme = 'angular';
+          this.stateFacade.setTheme(defaultTheme);
+          this.applyTheme(defaultTheme);
+        }
+      })
+    );
+    
     if (isPlatformBrowser(this.platformId)) {
-      // Load theme from localStorage on initialization
-      const savedTheme = localStorage.getItem('theme');
-      
-      if (savedTheme && this._availableThemes.includes(savedTheme)) {
-        // Use saved theme from localStorage
-        this._currentTheme.next(savedTheme);
-        this.applyTheme(savedTheme);
-      } else {
-        // Set Angular theme as default if no saved theme
-        const defaultTheme = 'angular';
-        this._currentTheme.next(defaultTheme);
-        this.applyTheme(defaultTheme);
-      }
-      
       // Listen for system theme changes
       if (window.matchMedia) {
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+          // Only update if user hasn't explicitly chosen a theme (checking localStorage)
           if (!localStorage.getItem('theme')) {
-            // Only update if user hasn't explicitly chosen a theme
             const newTheme = e.matches ? 'dark' : 'angular';
-            this._currentTheme.next(newTheme);
-            this.applyTheme(newTheme);
+            this.stateFacade.setTheme(newTheme);
           }
         });
       }
@@ -67,7 +68,15 @@ export class ThemeService {
   
   // Get current theme value
   get currentTheme(): string {
-    return this._currentTheme.value;
+    // This is a synchronous getter, which requires us to look in localStorage
+    // The reactive version should use currentTheme$ observable
+    if (isPlatformBrowser(this.platformId)) {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme && this._availableThemes.includes(savedTheme)) {
+        return savedTheme;
+      }
+    }
+    return 'angular'; // Default
   }
   
   // Set and apply a new theme
@@ -77,12 +86,7 @@ export class ThemeService {
       return;
     }
     
-    this._currentTheme.next(theme);
-    this.applyTheme(theme);
-    
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('theme', theme);
-    }
+    this.stateFacade.setTheme(theme);
   }
   
   // Clear user preference and revert to system preference
@@ -94,8 +98,7 @@ export class ThemeService {
       const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       const systemTheme = prefersDark ? 'dark' : 'angular';
       
-      this._currentTheme.next(systemTheme);
-      this.applyTheme(systemTheme);
+      this.stateFacade.setTheme(systemTheme);
     }
   }
   

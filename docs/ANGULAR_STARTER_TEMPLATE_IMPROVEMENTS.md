@@ -47,6 +47,7 @@ This document outlines the improvements implemented in our Angular starter templ
 - ✅ Added advanced hero sections, stat cards, and call-to-action elements
 - ✅ Removed custom CSS in favor of Tailwind and daisyUI utility classes
 - ✅ Created consistent layout system for content pages while using direct daisyUI for auth components
+- ✅ Implemented toast notification system using daisyUI's toast component for user feedback
 
 ### 7. Routing Improvements
 - ✅ Implemented lazy loading for routes to improve initial load times
@@ -55,82 +56,93 @@ This document outlines the improvements implemented in our Angular starter templ
 
 ## Pending Improvements
 
+### 1. State Management
+- ✅ Implemented RxJS-based global state management service with `StateService` and `StateFacadeService`
+- ✅ Integrated Toast notifications with global state management
+- ✅ Added global loading indicator using state management
+- ✅ Implemented service integration with state management system for all core services
 
-### 2. Additional Components
-- ✅ Created common UI components in a shared module
-- ⚠️ Implement toast or notification system for user feedback
-
-### 3. State Management
-- ⚠️ Consider adding NgRx for state management in larger applications
-- ⚠️ Implement local state management using Apollo's local resolvers
-
-### 4. Testing
+### 2. Testing
 - ⚠️ Add unit tests for services, guards, and components
 - ⚠️ Add integration tests for GraphQL operations
 - ⚠️ Add E2E tests for user flows
 
-### 5. Performance Optimizations
+### 3. Performance Optimizations
 - ⚠️ Implement Apollo query batching for REST endpoints
 - ⚠️ Add bundle analyzer to monitor build size
 
-### 6. Documentation
+### 4. Documentation
 - ⚠️ Create JSDoc comments for all public methods
 - ⚠️ Add API documentation with examples
 - ⚠️ Document authentication flows and user management
 
 ## Implementation Guide for Pending Items
 
-### Dashboard Component
-Create a basic dashboard standalone component:
-```typescript
-// src/app/features/dashboard/dashboard.component.ts
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+### State Management
+We've implemented a comprehensive RxJS-based state management solution:
 
-@Component({
-  selector: 'app-dashboard',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
-    <div class="dashboard-container">
-      <h2>Dashboard</h2>
-      <p>Welcome to your dashboard.</p>
-    </div>
-  `,
-  styles: [`
-    .dashboard-container {
-      padding: 20px;
-    }
-  `]
+```typescript
+// Core state service with BehaviorSubject
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root'
 })
-export class DashboardComponent { }
+export class StateService {
+  private state$ = new BehaviorSubject<AppState>(initialState);
+  
+  // Get observable of entire state
+  getState(): Observable<AppState> {
+    return this.state$.asObservable();
+  }
+  
+  // Select a slice of state
+  select<T>(selector: (state: AppState) => T): Observable<T> {
+    return this.getState().pipe(
+      map(selector),
+      distinctUntilChanged()
+    );
+  }
+  
+  // Update state
+  updateState(partialState: Partial<AppState>): void {
+    const currentState = this.state$.getValue();
+    const newState = this.deepMerge(currentState, partialState);
+    this.state$.next(newState);
+  }
+}
+
+// Facade for components to use
+@Injectable({
+  providedIn: 'root'
+})
+export class StateFacadeService {
+  constructor(private stateService: StateService) {}
+  
+  // Simplified API for components
+  getTheme(): Observable<string> {
+    return this.stateService.select(state => state.ui.theme);
+  }
+  
+  setTheme(theme: string): void {
+    this.stateService.updateState({
+      ui: { ...this.stateService.getCurrentState().ui, theme }
+    });
+  }
+  
+  // More methods...
+}
 ```
 
-### Admin Component
-Create an admin standalone component with role protection:
-```typescript
-// src/app/features/admin/admin.component.ts
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+Key features:
+- Central store using RxJS BehaviorSubject
+- Immutable state updates with deep merging
+- Selector pattern for efficient component subscriptions
+- Facade service to simplify component usage
+- TypeScript interfaces for type safety
 
-@Component({
-  selector: 'app-admin',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
-    <div class="admin-container">
-      <h2>Admin Panel</h2>
-      <p>Admin functionality goes here.</p>
-    </div>
-  `,
-  styles: [`
-    .admin-container {
-      padding: 20px;
-    }
-  `]
-})
-export class AdminComponent { }
-```
+This implementation avoids the complexity of NgRx while providing robust state management suitable for most applications. For larger applications with more complex state requirements, NgRx could be added later.
 
 ## Current Folder Structure
 
@@ -140,13 +152,11 @@ src/
 │   ├── core/                  # Core functionality (services, guards, interceptors)
 │   │   ├── guards/            # Route guards (AuthGuard, RoleGuard)
 │   │   ├── interceptors/      # HTTP interceptors (AuthInterceptor)
-│   │   ├── services/          # Services (AmplifyService, ApolloGraphqlService, ErrorHandlerService, ThemeService)
+│   │   ├── services/          # Services (AmplifyService, ApolloGraphqlService, ErrorHandlerService, ThemeService, ToastService, StateService, StateFacadeService)
 │   │   └── core.module.ts     # Core module definition
 │   ├── features/              # Feature components
-│   │   ├── admin/             # Admin feature (pending - will be standalone)
 │   │   ├── auth/              # Authentication feature
 │   │   │   └── components/    # Login, Register, Unauthorized components (standalone)
-│   │   ├── dashboard/         # Dashboard feature (pending - will be standalone)
 │   │   └── profile/           # Profile feature (standalone component)
 │   ├── shared/                # Shared components, directives, pipes
 │   │   └── components/        # Shared components
@@ -163,11 +173,32 @@ src/
 
 ## Key Services Details
 
+### StateService
+Provides centralized state management using RxJS:
+- Maintains application state in a BehaviorSubject
+- Provides immutable state updates with deep merging
+- Includes selectors for efficient component subscriptions
+- Manages user authentication state, theme preferences, notifications, and loading state
+- Uses TypeScript interfaces for type safety
+- Provides reactive pattern for state changes across the application
+- Includes methods for common state operations (auth state, theme, notifications, etc.)
+
+### StateFacadeService
+Provides a simplified API for components to interact with state:
+- Abstracts the details of state management implementation
+- Provides focused methods for common state operations
+- Follows the Facade pattern to reduce coupling with components
+- Serves as the single point of interaction for components
+- Simplifies testing by allowing easy mocking of state interactions
+
 ### AmplifyService
 Handles all AWS Amplify authentication operations with automatic token refresh:
-- Sign up, sign in, and sign out
-- Token management and refresh
+- Sign up, sign in, and sign out functionality
+- Token management and automatic refresh
 - User session management
+- Integrated with state management for authentication status
+- Provides success/error notifications via state management
+- Stores user details (username, roles) in global state
 
 ### ApolloGraphqlService
 Manages GraphQL operations with Apollo Client:
@@ -175,6 +206,25 @@ Manages GraphQL operations with Apollo Client:
 - Mutation execution with optimistic updates
 - Subscription handling for real-time updates
 - Advanced caching configuration
+- Integrated with state management for loading indicators
+- Provides error notifications through state management
+- Handles authentication token injection for requests
+
+### ErrorHandlerService
+Centralized error handling service:
+- Handles HTTP errors from REST endpoints
+- Handles client-side errors consistently
+- Integrated with state management for error notifications
+- Redirects to appropriate pages for auth errors
+- Provides user-friendly error messages
+
+### UserService
+Manages user data operations:
+- Provides methods for CRUD operations on user data
+- Integrated with state management for loading state and notifications
+- Implements local caching for performance optimization
+- Fetches current user details from authenticated user information
+- Provides error and success notifications through state management
 
 ### ThemeService
 Manages application themes with daisyUI integration:
@@ -182,6 +232,203 @@ Manages application themes with daisyUI integration:
 - Observable theme state for components to subscribe
 - Multiple theme options from daisyUI
 - Automatic application of themes across components
+- Integrated with state management for theme persistence
+- Handles system theme preferences
+
+### Global State Architecture
+
+The global state management system follows a clean architecture pattern:
+
+1. **State Definition**: 
+   ```typescript
+   export interface AppState {
+     user: {
+       isAuthenticated: boolean;
+       userId?: string;
+       username?: string;
+       roles?: string[];
+     };
+     ui: {
+       theme: string;
+       notifications: Notification[];
+       isLoading: boolean;
+       lastViewedPage: string;
+     };
+     [key: string]: any; // Allow for dynamic state slices
+   }
+   ```
+
+2. **State Service (Core Implementation)**:
+   - Maintains a BehaviorSubject with the application state
+   - Provides methods for state updates and selection
+   - Handles immutable state updates
+   - Manages state persistence where needed
+
+3. **Facade Service (API Layer)**:
+   - Provides a clean API for components
+   - Abstracts away implementation details
+   - Offers domain-specific methods rather than generic state operations
+   - Simplifies component interaction with state
+
+4. **Service Integration**:
+   - Core services are integrated with state management
+   - Services update the state when operations complete
+   - Services react to state changes when needed
+   - Authentication state is centrally managed
+   - UI state (loading, notifications) is updated by services
+
+5. **Component Interaction**:
+   - Components interact only with the Facade service
+   - Components subscribe to state observables
+   - Components dispatch actions through Facade methods
+   - Ensures unidirectional data flow
+
+### State Integration Examples
+
+**Authentication Flow**:
+```typescript
+// AmplifyService updates auth state on successful login
+signIn(username: string, password: string): Observable<any> {
+  return from(signIn({ username, password })).pipe(
+    tap(async (result) => {
+      if (result && result.isSignedIn) {
+        // Update auth state in global state management
+        this.stateFacade.setAuthenticated(true, {
+          userId: user.userId,
+          username: user.username,
+          roles: roles
+        });
+        
+        // Show success notification via state management
+        this.stateFacade.notify('Successfully signed in', 'success');
+      }
+    })
+  );
+}
+
+// Components subscribe to auth state
+ngOnInit() {
+  this.isAuthenticated$ = this.stateFacade.isAuthenticated();
+  this.username$ = this.stateFacade.getUsername();
+}
+```
+
+**Loading State**:
+```typescript
+// Apollo service updates loading state during operations
+query<T = any>(options: WatchQueryOptions<OperationVariables, T>): Observable<T> {
+  // Set loading state
+  this.stateFacade.setLoading(true);
+  
+  return this.apollo.watchQuery<T>(options)
+    .valueChanges
+    .pipe(
+      // ... operation logic ...
+      finalize(() => {
+        // Clear loading state when complete
+        this.stateFacade.setLoading(false);
+      })
+    );
+}
+
+// LoadingIndicator component subscribes to loading state
+ngOnInit(): void {
+  this.subscription = this.stateFacade.isLoading().subscribe(
+    isLoading => this.isLoading = isLoading
+  );
+}
+```
+
+**Theme Management**:
+```typescript
+// Theme service uses state for theme persistence
+setTheme(theme: string): void {
+  localStorage.setItem('theme', theme);
+  this.stateFacade.setTheme(theme);
+}
+
+// ThemeToggle component subscribes to theme changes
+ngOnInit(): void {
+  this.themeSubscription = this.stateFacade.getTheme().subscribe((theme: string) => {
+    this.currentTheme = theme;
+  });
+}
+```
+
+**Data Caching**:
+```typescript
+// UserService implements caching with state notifications
+getUser(id: string): Observable<User> {
+  // Try to get from cache first
+  const cachedUser = this.userCache.get(id);
+  if (cachedUser) {
+    return of(cachedUser);
+  }
+  
+  // If not in cache, fetch from API
+  return this.apolloService.query<{ getUser: User }>({
+    query: GET_USER,
+    variables: { id }
+  }).pipe(
+    map(result => result.getUser),
+    tap(user => {
+      // Cache the result
+      if (user) {
+        this.userCache.set(id, user);
+      }
+    }),
+    catchError(error => {
+      this.stateFacade.notify(`Error fetching user: ${error.message}`, 'error');
+      throw error;
+    })
+  );
+}
+```
+
+### Folder Structure with State Management
+
+```
+src/
+├── app/
+│   ├── core/                  # Core functionality
+│   │   ├── guards/            # Route guards (AuthGuard, RoleGuard)
+│   │   │   ├── auth.guard.ts  # Authentication guard
+│   │   │   └── role.guard.ts  # Role-based access guard
+│   │   ├── interceptors/      # HTTP interceptors
+│   │   │   └── auth.interceptor.ts # Authentication interceptor
+│   │   ├── models/            # TypeScript interfaces and models
+│   │   │   └── user.model.ts  # User model
+│   │   ├── services/          # Core services
+│   │   │   ├── amplify.service.ts        # AWS Amplify service (integrated with state)
+│   │   │   ├── apollo-graphql.service.ts # Apollo GraphQL service (integrated with state)
+│   │   │   ├── error-handler.service.ts  # Error handling service (integrated with state)
+│   │   │   ├── state.service.ts          # Core state management service
+│   │   │   ├── state-facade.service.ts   # State facade for components
+│   │   │   ├── theme.service.ts          # Theme management service (integrated with state)
+│   │   │   └── user.service.ts           # User data service (integrated with state)
+│   │   └── core.module.ts     # Core module definition
+│   ├── features/              # Feature components
+│   │   ├── auth/              # Authentication feature
+│   │   │   └── components/    # Login, Register, Unauthorized components (use state)
+│   │   └── profile/           # Profile feature (uses state for auth and user data)
+│   ├── shared/                # Shared components, directives, pipes
+│   │   ├── components/        # Shared components
+│   │   │   ├── loading-indicator/ # Loading indicator (subscribes to loading state)
+│   │   │   ├── toast/             # Toast notifications (subscribes to notification state)
+│   │   │   ├── theme-toggle/      # Theme toggle (subscribes to theme state)
+│   │   │   ├── navbar/            # Navbar component (subscribes to auth state)
+│   │   │   └── footer/            # Footer component
+│   │   └── services/          # Shared services
+│   │       └── toast.service.ts   # Toast service (integrated with state)
+│   ├── layouts/               # Layout components
+│   │   ├── auth-layout/       # Layout for auth pages
+│   │   └── main-layout/       # Main application layout (subscribes to auth state)
+│   ├── app.component.ts       # App root component
+│   ├── app.routes.ts          # Application routes
+│   └── app.config.ts          # App configuration
+├── environments/              # Environment configuration
+└── assets/                    # Static assets
+```
 
 ### AuthInterceptor
 Automatically adds authentication tokens to HTTP requests:

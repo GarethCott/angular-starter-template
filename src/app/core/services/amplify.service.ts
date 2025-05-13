@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
 import { Amplify } from 'aws-amplify';
 import { signIn, signUp, confirmSignUp, signOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
-import { BehaviorSubject, Observable, from } from 'rxjs';
+import { Observable, from } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { StateFacadeService } from './state-facade.service';
+import { tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AmplifyService {
-  private authenticationSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  
-  constructor() {
+  constructor(private stateFacade: StateFacadeService) {
     // Initialize Amplify with configuration from environment - Auth only
     Amplify.configure({
       Auth: {
@@ -35,9 +35,49 @@ export class AmplifyService {
   private async checkAuthStatus(): Promise<void> {
     try {
       const session = await fetchAuthSession();
-      this.authenticationSubject.next(session.tokens !== undefined);
+      const isAuthenticated = session.tokens !== undefined;
+      
+      if (isAuthenticated) {
+        // Get the user details if authenticated
+        const user = await getCurrentUser();
+        
+        // Get roles from the token payload if available
+        const roles: string[] = this.extractRolesFromSession(session);
+        
+        // Update auth state with user information
+        this.stateFacade.setAuthenticated(true, {
+          userId: user.userId,
+          username: user.username,
+          roles
+        });
+      } else {
+        this.stateFacade.setAuthenticated(false);
+      }
     } catch {
-      this.authenticationSubject.next(false);
+      this.stateFacade.setAuthenticated(false);
+    }
+  }
+  
+  /**
+   * Extract roles from the Cognito session
+   */
+  private extractRolesFromSession(session: any): string[] {
+    try {
+      const cognitoGroups = session.tokens?.idToken?.payload?.['cognito:groups'];
+      
+      if (!cognitoGroups) {
+        return [];
+      }
+      
+      if (Array.isArray(cognitoGroups)) {
+        return cognitoGroups.map(group => String(group));
+      }
+      
+      // If it's not an array but exists, convert to string and wrap in array
+      return [String(cognitoGroups)];
+    } catch (error) {
+      console.error('Error extracting roles from session:', error);
+      return [];
     }
   }
   
@@ -83,7 +123,27 @@ export class AmplifyService {
    * Sign in a user with their username and password
    */
   signIn(username: string, password: string): Observable<any> {
-    return from(signIn({ username, password }));
+    return from(signIn({ username, password })).pipe(
+      tap(async (result) => {
+        if (result && result.isSignedIn) {
+          // Update auth state after successful sign in
+          const user = await getCurrentUser();
+          const session = await fetchAuthSession();
+          
+          // Get roles from the token payload
+          const roles = this.extractRolesFromSession(session);
+          
+          this.stateFacade.setAuthenticated(true, {
+            userId: user.userId,
+            username: user.username,
+            roles
+          });
+          
+          // Show success notification
+          this.stateFacade.notify('Successfully signed in', 'success');
+        }
+      })
+    );
   }
   
   /**
@@ -98,21 +158,39 @@ export class AmplifyService {
           email
         }
       }
-    }));
+    })).pipe(
+      tap(() => {
+        // Show success notification
+        this.stateFacade.notify('Sign up successful! Please check your email for confirmation code', 'success');
+      })
+    );
   }
   
   /**
    * Confirm sign up with verification code
    */
   confirmSignUp(username: string, code: string): Observable<any> {
-    return from(confirmSignUp({ username, confirmationCode: code }));
+    return from(confirmSignUp({ username, confirmationCode: code })).pipe(
+      tap(() => {
+        // Show success notification
+        this.stateFacade.notify('Account confirmed successfully! You can now sign in', 'success');
+      })
+    );
   }
   
   /**
    * Sign out the current user
    */
   signOut(): Observable<any> {
-    return from(signOut());
+    return from(signOut()).pipe(
+      tap(() => {
+        // Reset authentication state
+        this.stateFacade.setAuthenticated(false);
+        
+        // Show notification
+        this.stateFacade.notify('You have been signed out', 'info');
+      })
+    );
   }
   
   /**
@@ -126,6 +204,6 @@ export class AmplifyService {
    * Get the authentication state as an Observable
    */
   isAuthenticated(): Observable<boolean> {
-    return this.authenticationSubject.asObservable();
+    return this.stateFacade.isAuthenticated();
   }
 } 

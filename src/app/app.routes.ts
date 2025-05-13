@@ -54,7 +54,7 @@ export const routes: Routes = [
         loadComponent: () => import('./shared/components/daisy-showcase.component')
           .then(c => c.DaisyShowcaseComponent)
       }
-      // Dashboard and admin components will be implemented later
+      // Future components can be added here as needed
     ]
   },
   {

@@ -17,6 +17,7 @@ export class ToastComponent implements OnInit, OnDestroy {
   constructor(private toastService: ToastService) { }
 
   ngOnInit(): void {
+    // Subscribe to toasts from the service (which now uses state management)
     this.subscription = this.toastService.toasts$.subscribe(toasts => {
       this.toasts = toasts;
     });

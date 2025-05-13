@@ -17,6 +17,7 @@ This starter template includes several advanced features:
 - **Advanced Caching Strategy** for better performance
 - **Role-based Authentication** with route guards
 - **Lazy Loading** for improved initial load times
+- **Toast Notification System** using daisyUI for user feedback
 
 ## Architecture Overview
 
@@ -31,6 +32,7 @@ The template follows a clear separation of concerns:
 - **AmplifyService**: Encapsulates all AWS Amplify authentication operations with automatic token refresh
 - **ApolloGraphqlService**: Manages GraphQL operations with Apollo Client
 - **ThemeService**: Manages application themes with persistent user preferences
+- **ToastService**: Provides toast notifications for user feedback using daisyUI's toast component
 - **AuthInterceptor**: Automatically adds authentication tokens to HTTP requests
 - **Role-based Guards**: Protects routes based on user roles
 - **Shared Components**: Reusable UI components (Navbar, Footer, Theme Toggle)

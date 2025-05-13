@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../../core/services/theme.service';
+import { StateFacadeService } from '../../../core/services/state-facade.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -39,7 +40,10 @@ export class ThemeToggleComponent implements OnInit, OnDestroy {
     'caramellatte', 'abyss', 'silk'
   ];
 
-  constructor(private themeService: ThemeService) {}
+  constructor(
+    private themeService: ThemeService,
+    private stateFacade: StateFacadeService
+  ) {}
 
   ngOnInit(): void {
     this.availableThemes = this.themeService.availableThemes;
@@ -48,8 +52,8 @@ export class ThemeToggleComponent implements OnInit, OnDestroy {
     // Check if using system theme (no localStorage entry)
     this.isUsingSystemTheme = !localStorage.getItem('theme');
     
-    // Subscribe to theme changes
-    this.themeSubscription = this.themeService.currentTheme$.subscribe((theme: string) => {
+    // Subscribe to theme changes from state management
+    this.themeSubscription = this.stateFacade.getTheme().subscribe((theme: string) => {
       this.currentTheme = theme;
     });
   }
@@ -62,7 +66,8 @@ export class ThemeToggleComponent implements OnInit, OnDestroy {
   }
 
   changeTheme(theme: string): void {
-    this.themeService.setTheme(theme);
+    // Use state facade to set theme
+    this.stateFacade.setTheme(theme);
     this.isUsingSystemTheme = false;
   }
   

@@ -5,12 +5,13 @@ import { setContext } from '@apollo/client/link/context';
 import { ApolloClientOptions, InMemoryCache, split } from '@apollo/client/core';
 import { environment } from '../../../environments/environment';
 import { WatchQueryOptions, OperationVariables } from '@apollo/client/core';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { map, catchError, finalize, tap } from 'rxjs/operators';
 import { AmplifyService } from './amplify.service';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { createClient } from 'graphql-ws';
 import { getMainDefinition } from '@apollo/client/utilities';
+import { StateFacadeService } from './state-facade.service';
 
 /**
  * Service for handling Apollo GraphQL operations.
@@ -25,7 +26,8 @@ export class ApolloGraphqlService {
   constructor(
     private apolloProvider: Apollo,
     private httpLink: HttpLink,
-    private amplifyService: AmplifyService
+    private amplifyService: AmplifyService,
+    private stateFacade: StateFacadeService
   ) {
     this.apollo = this.apolloProvider.use('default');
     this.setupApolloClient();
@@ -147,6 +149,9 @@ export class ApolloGraphqlService {
     errors.forEach(error => {
       console.error(`[GraphQL error]: Operation: ${operation}, Message: ${error.message}`);
       
+      // Notify user about the error
+      this.stateFacade.notify(`GraphQL Error: ${error.message}`, 'error');
+      
       // Handle specific error types
       if (error.extensions && error.extensions['code'] === 'UNAUTHENTICATED') {
         // Refresh tokens or redirect to login
@@ -158,6 +163,7 @@ export class ApolloGraphqlService {
       // Handle network errors differently from GraphQL errors
       if (error.networkError) {
         console.error('Network error', error.networkError);
+        this.stateFacade.notify('Network error while connecting to the GraphQL server', 'error');
       }
     });
   }
@@ -168,16 +174,38 @@ export class ApolloGraphqlService {
    * @returns An Observable of the query result
    */
   query<T = any>(options: WatchQueryOptions<OperationVariables, T>): Observable<T> {
+    // Get the operation name for logging and tracking
+    const operationName = this.getOperationName(options.query);
+    
+    // Set loading state
+    this.stateFacade.setLoading(true);
+    
     return this.apollo.watchQuery<T>(options)
       .valueChanges
       .pipe(
+        tap(result => {
+          if (result.loading) {
+            // Update loading state
+            this.stateFacade.setLoading(true);
+          }
+        }),
         map(result => {
           if (result.errors) {
-            // Get operation name for error reporting
-            const operationName = 'unknown query';
             this.handleGraphQLErrors(operationName, result.errors as any[]);
           }
+          // Handle null or undefined data
+          if (!result.data) {
+            throw new Error(`No data returned for operation: ${operationName}`);
+          }
           return result.data;
+        }),
+        catchError(error => {
+          this.handleGraphQLErrors(operationName, [error]);
+          return throwError(() => error);
+        }),
+        finalize(() => {
+          // Clear loading state when complete
+          this.stateFacade.setLoading(false);
         })
       );
   }
@@ -189,17 +217,33 @@ export class ApolloGraphqlService {
    * @returns An Observable of the mutation result
    */
   mutate<T = any>(mutation: any, variables?: OperationVariables): Observable<T> {
+    // Get the operation name for logging and tracking
+    const operationName = this.getOperationName(mutation);
+    
+    // Set loading state
+    this.stateFacade.setLoading(true);
+    
     return this.apollo.mutate<T>({
       mutation,
       variables
     }).pipe(
       map(result => {
         if (result.errors) {
-          // Get operation name for error reporting
-          const operationName = 'unknown mutation';
           this.handleGraphQLErrors(operationName, result.errors as any[]);
         }
-        return result.data as T;
+        // Handle null or undefined data
+        if (!result.data) {
+          throw new Error(`No data returned for mutation: ${operationName}`);
+        }
+        return result.data;
+      }),
+      catchError(error => {
+        this.handleGraphQLErrors(operationName, [error]);
+        return throwError(() => error);
+      }),
+      finalize(() => {
+        // Clear loading state when complete
+        this.stateFacade.setLoading(false);
       })
     );
   }
@@ -208,8 +252,8 @@ export class ApolloGraphqlService {
    * Execute a GraphQL mutation with optimistic response
    * @param mutation The GraphQL mutation document
    * @param variables The variables for the mutation
-   * @param optimisticResponse The optimistic response to use before server response
-   * @param updateFunction Cache update function
+   * @param optimisticResponse The optimistic response object
+   * @param updateFunction The update function for the Apollo cache
    * @returns An Observable of the mutation result
    */
   optimisticMutate<T = any>(
@@ -218,6 +262,12 @@ export class ApolloGraphqlService {
     optimisticResponse?: any, 
     updateFunction?: any
   ): Observable<T> {
+    // Get the operation name for logging and tracking
+    const operationName = this.getOperationName(mutation);
+    
+    // Set loading state
+    this.stateFacade.setLoading(true);
+    
     return this.apollo.mutate<T>({
       mutation,
       variables,
@@ -226,33 +276,66 @@ export class ApolloGraphqlService {
     }).pipe(
       map(result => {
         if (result.errors) {
-          // Get operation name for error reporting
-          const operationName = 'unknown mutation';
           this.handleGraphQLErrors(operationName, result.errors as any[]);
         }
-        return result.data as T;
+        // Handle null or undefined data
+        if (!result.data) {
+          throw new Error(`No data returned for optimistic mutation: ${operationName}`);
+        }
+        return result.data;
+      }),
+      catchError(error => {
+        this.handleGraphQLErrors(operationName, [error]);
+        return throwError(() => error);
+      }),
+      finalize(() => {
+        // Clear loading state when complete
+        this.stateFacade.setLoading(false);
       })
     );
   }
 
   /**
-   * Subscribe to real-time updates
+   * Subscribe to a GraphQL subscription
    * @param subscription The GraphQL subscription document
    * @param variables The variables for the subscription
-   * @returns An Observable of the subscription updates
+   * @returns An Observable of the subscription result
    */
   subscribe<T = any>(subscription: any, variables?: OperationVariables): Observable<T> {
+    const operationName = this.getOperationName(subscription);
+    
     return this.apollo.subscribe<T>({
       query: subscription,
       variables
     }).pipe(
       map(result => {
         if (result.errors) {
-          const operationName = 'unknown subscription';
           this.handleGraphQLErrors(operationName, result.errors as any[]);
         }
-        return result.data as T;
+        // Handle null or undefined data
+        if (!result.data) {
+          throw new Error(`No data returned for subscription: ${operationName}`);
+        }
+        return result.data;
+      }),
+      catchError(error => {
+        this.handleGraphQLErrors(operationName, [error]);
+        return throwError(() => error);
       })
     );
+  }
+  
+  /**
+   * Extract operation name from a GraphQL document
+   * @param document The GraphQL document
+   * @returns The operation name or 'unknown operation'
+   */
+  private getOperationName(document: any): string {
+    try {
+      const definition = getMainDefinition(document);
+      return definition.name?.value || 'unknown operation';
+    } catch (error) {
+      return 'unknown operation';
+    }
   }
 } 

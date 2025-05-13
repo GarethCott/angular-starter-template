@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
+import { StateFacadeService } from '../../core/services/state-facade.service';
+import { Notification } from '../../core/services/state.service';
 
 export type ToastType = 'info' | 'success' | 'warning' | 'error';
 export type ToastPosition = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center' | 'bottom-center';
@@ -18,10 +20,34 @@ export interface Toast {
   providedIn: 'root'
 })
 export class ToastService {
-  private toasts: BehaviorSubject<Toast[]> = new BehaviorSubject<Toast[]>([]);
-  public toasts$: Observable<Toast[]> = this.toasts.asObservable();
+  // Map state notifications to toast format
+  public toasts$: Observable<Toast[]>;
+  private defaultDuration = 3000;
+  private defaultPosition: ToastPosition = 'top-right';
 
-  constructor() { }
+  constructor(private stateFacade: StateFacadeService) {
+    // Transform state notifications to toast format
+    this.toasts$ = this.stateFacade.getNotifications().pipe(
+      map(notifications => notifications
+        .filter(notification => !notification.read)
+        .map(this.convertNotificationToToast.bind(this))
+      )
+    );
+  }
+
+  /**
+   * Convert a state notification to a toast format
+   */
+  private convertNotificationToToast(notification: Notification): Toast {
+    return {
+      id: notification.id,
+      message: notification.message,
+      type: notification.type,
+      duration: this.defaultDuration,
+      position: this.defaultPosition,
+      showClose: true
+    };
+  }
 
   /**
    * Show a toast notification
@@ -36,27 +62,18 @@ export class ToastService {
       showClose?: boolean
     } = {}
   ): string {
-    const id = this.generateId();
-    const toast: Toast = {
-      id,
-      message,
-      type,
-      title: options.title,
-      duration: options.duration || 3000,
-      position: options.position || 'top-right',
-      showClose: options.showClose !== undefined ? options.showClose : true
-    };
-
-    this.toasts.next([...this.toasts.getValue(), toast]);
-
+    // Create a notification in the global state
+    const notification = this.stateFacade.notify(message, type);
+    
     // Auto-remove toast after duration
-    if (toast.duration > 0) {
+    const duration = options.duration || this.defaultDuration;
+    if (duration > 0) {
       setTimeout(() => {
-        this.remove(id);
-      }, toast.duration);
+        this.remove(notification.id);
+      }, duration);
     }
 
-    return id;
+    return notification.id;
   }
 
   /**
@@ -91,21 +108,15 @@ export class ToastService {
    * Remove a specific toast by ID
    */
   remove(id: string): void {
-    const currentToasts = this.toasts.getValue();
-    this.toasts.next(currentToasts.filter(toast => toast.id !== id));
+    // Mark notification as read in global state
+    this.stateFacade.markNotificationAsRead(id);
   }
 
   /**
    * Clear all toasts
    */
   clear(): void {
-    this.toasts.next([]);
-  }
-
-  /**
-   * Generate a random ID for the toast
-   */
-  private generateId(): string {
-    return `toast-${Math.random().toString(36).substring(2, 9)}`;
+    // Clear notifications in global state
+    this.stateFacade.clearNotifications();
   }
 } 
