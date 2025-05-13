@@ -24,6 +24,7 @@
     "@aws-amplify/ui-angular": "^5.1.2",
     "@tailwindcss/postcss": "^4.1.6",
     "apollo-angular": "^10.0.3",
+    "daisyui": "^5.0.35",
     "graphql": "^16.11.0",
     "graphql-ws": "^5.15.0",
     "postcss": "^8.5.3",

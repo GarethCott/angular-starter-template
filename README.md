@@ -10,6 +10,8 @@ This starter template includes several advanced features:
 - **Apollo Client Integration** for GraphQL operations
 - **AWS Amplify Integration** for authentication and user management
 - **Tailwind CSS** for utility-first styling 
+- **daisyUI Component Library** for high-quality themeable UI components
+- **Theme Management** with persistent user preferences
 - **Comprehensive Error Handling** for both GraphQL and HTTP operations
 - **Real-time Updates** with WebSocket subscriptions
 - **Advanced Caching Strategy** for better performance
@@ -22,13 +24,16 @@ The template follows a clear separation of concerns:
 
 1. **AWS Amplify**: Handles authentication, user management, and token management
 2. **Apollo Client**: Manages GraphQL operations, caching, and real-time subscriptions
+3. **daisyUI & Tailwind CSS**: Provides themeable UI components and utility-first styling
 
 ### Key Components
 
 - **AmplifyService**: Encapsulates all AWS Amplify authentication operations with automatic token refresh
 - **ApolloGraphqlService**: Manages GraphQL operations with Apollo Client
+- **ThemeService**: Manages application themes with persistent user preferences
 - **AuthInterceptor**: Automatically adds authentication tokens to HTTP requests
 - **Role-based Guards**: Protects routes based on user roles
+- **Shared Components**: Reusable UI components (Navbar, Footer, Theme Toggle)
 
 ### Project Structure
 
@@ -38,7 +43,7 @@ src/
 │   ├── core/                  # Core functionality (services, guards, interceptors)
 │   │   ├── guards/            # Route guards (AuthGuard, RoleGuard)
 │   │   ├── interceptors/      # HTTP interceptors (AuthInterceptor)
-│   │   ├── services/          # Services (AmplifyService, ApolloGraphqlService, ErrorHandlerService)
+│   │   ├── services/          # Services (AmplifyService, ApolloGraphqlService, ErrorHandlerService, ThemeService)
 │   │   └── core.module.ts     # Core module definition
 │   ├── features/              # Feature components
 │   │   ├── admin/             # Admin feature
@@ -47,6 +52,11 @@ src/
 │   │   ├── dashboard/         # Dashboard feature
 │   │   └── profile/           # Profile feature (standalone component)
 │   ├── shared/                # Shared components, directives, pipes
+│   │   └── components/        # Shared components
+│   │       ├── footer/        # Footer component
+│   │       ├── navbar/        # Navbar component 
+│   │       ├── theme-toggle/  # Theme toggle component
+│   │       └── daisy-showcase/# Showcase of daisyUI components
 │   ├── app.component.ts       # App root component
 │   ├── app.routes.ts          # Application routes
 │   └── app.module.ts          # App module definition
@@ -82,6 +92,11 @@ export const environment = {
     enableOfflineMode: true,
     enableErrorReporting: true,
     enableAnalytics: true
+  },
+  // Theme configuration
+  ui: {
+    defaultTheme: 'light',
+    availableThemes: ['light', 'dark', 'cupcake', 'corporate', 'emerald']
   }
 };
 ```
@@ -101,6 +116,17 @@ npm install
 # Start the development server
 ng serve
 ```
+
+## Theme Management
+
+This template includes a comprehensive theme management system using daisyUI. Features include:
+
+- Multiple built-in themes (light, dark, cupcake, corporate, emerald)
+- Theme switcher with persistent user preferences
+- Reactive theme updates across the application
+- Consistent styling with daisyUI components
+
+You can explore available components in the Components showcase route.
 
 ## Documentation
 

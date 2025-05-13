@@ -1,5 +1,25 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import "tailwindcss";
+@plugin "daisyui" {
+  themes: all;
+}
+
+/* Custom theme for our Angular starter template */
+@plugin "daisyui/theme" {
+  name: "angular";
+  color-scheme: light;
+
+  --color-primary: oklch(54% 0.24 308);        /* Angular primary purple */
+  --color-primary-content: oklch(98% 0.01 308);
+  --color-secondary: oklch(65% 0.22 10);       /* Angular accent reddish */
+  --color-secondary-content: oklch(98% 0.01 10);
+  --color-accent: oklch(75% 0.15 150);         /* Custom accent color */
+  --color-accent-content: oklch(20% 0.05 150);
+  --color-base-100: oklch(100% 0 0);           /* White background */
+  --color-base-200: oklch(95% 0.01 308);       /* Light purple tint */
+  --color-base-300: oklch(90% 0.02 308);
+  --color-base-content: oklch(25% 0.01 308);
+}
 
 /* Custom styles below this line */

@@ -4,6 +4,7 @@ import { RoleGuard } from './core/guards/role.guard';
 import { LoginComponent } from './features/auth/components/login.component';
 import { RegisterComponent } from './features/auth/components/register.component';
 import { ProfileComponent } from './features/profile/profile.component';
+import { DaisyShowcaseComponent } from './shared/components/daisy-showcase.component';
 
 export const routes: Routes = [
   {
@@ -26,6 +27,10 @@ export const routes: Routes = [
     path: 'profile', 
     canActivate: [AuthGuard],
     component: ProfileComponent
+  },
+  {
+    path: 'components',
+    component: DaisyShowcaseComponent
   },
 //   {
 //     path: 'admin',

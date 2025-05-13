@@ -1,7 +1,7 @@
 # Angular Starter Template Improvements Documentation
 
 ## Overview
-This document outlines the improvements implemented in our Angular starter template that integrates Apollo Client for GraphQL operations and AWS Amplify for authentication. The improvements focus on best practices, code organization, performance, and security.
+This document outlines the improvements implemented in our Angular starter template that integrates Apollo Client for GraphQL operations, AWS Amplify for authentication, and daisyUI for UI components. The improvements focus on best practices, code organization, performance, and security.
 
 ## Implemented Improvements
 
@@ -31,17 +31,21 @@ This document outlines the improvements implemented in our Angular starter templ
 - ✅ Added unauthorized component for access control as standalone
 - ✅ Implemented proper loading states and error handling in UI
 - ✅ Converted components to standalone architecture for better modularity and performance
+- ✅ Created shared reusable components (Navbar, Footer, ThemeToggle)
+- ✅ Implemented a theme service for consistent theme management across the application
 
-### 6. Routing Improvements
+### 6. UI Improvements
+- ✅ Integrated Tailwind CSS for utility-first styling
+- ✅ Implemented daisyUI for high-quality, themeable UI components
+- ✅ Added theme switching capability with persistent preferences
+- ✅ Implemented responsive design with Tailwind and daisyUI classes
+- ✅ Applied consistent styling across components
+- ✅ Removed custom CSS in favor of Tailwind and daisyUI utility classes
+
+### 7. Routing Improvements
 - ✅ Implemented lazy loading for routes to improve initial load times
 - ✅ Added proper route guards for protected routes
 - ✅ Updated routing to support standalone components
-
-### 7. UI Improvements
-- ✅ Integrated Tailwind CSS for utility-first styling
-- ✅ Implemented responsive design with Tailwind classes
-- ✅ Applied consistent styling across components
-- ✅ Removed custom CSS in favor of Tailwind utility classes
 
 ## Pending Improvements
 
@@ -50,7 +54,7 @@ This document outlines the improvements implemented in our Angular starter templ
 - ⚠️ Need to implement admin component to support admin functionality with role guard
 
 ### 2. Additional Components
-- ⚠️ Create common UI components in a shared module
+- ✅ Created common UI components in a shared module
 - ⚠️ Implement toast or notification system for user feedback
 
 ### 3. State Management
@@ -133,7 +137,7 @@ src/
 │   ├── core/                  # Core functionality (services, guards, interceptors)
 │   │   ├── guards/            # Route guards (AuthGuard, RoleGuard)
 │   │   ├── interceptors/      # HTTP interceptors (AuthInterceptor)
-│   │   ├── services/          # Services (AmplifyService, ApolloGraphqlService, ErrorHandlerService)
+│   │   ├── services/          # Services (AmplifyService, ApolloGraphqlService, ErrorHandlerService, ThemeService)
 │   │   └── core.module.ts     # Core module definition
 │   ├── features/              # Feature components
 │   │   ├── admin/             # Admin feature (pending - will be standalone)
@@ -141,7 +145,11 @@ src/
 │   │   │   └── components/    # Login, Register, Unauthorized components (standalone)
 │   │   ├── dashboard/         # Dashboard feature (pending - will be standalone)
 │   │   └── profile/           # Profile feature (standalone component)
-│   ├── shared/                # Shared components, directives, pipes (pending)
+│   ├── shared/                # Shared components, directives, pipes
+│   │   └── components/        # Shared components
+│   │       ├── footer/        # Footer component
+│   │       ├── navbar/        # Navbar component
+│   │       └── theme-toggle/  # Theme toggle component
 │   ├── app.component.ts       # App root component
 │   ├── app.routes.ts          # Application routes
 │   └── app.module.ts          # App module definition
@@ -165,20 +173,18 @@ Manages GraphQL operations with Apollo Client:
 - Subscription handling for real-time updates
 - Advanced caching configuration
 
+### ThemeService
+Manages application themes with daisyUI integration:
+- Theme switching with persistent storage
+- Observable theme state for components to subscribe
+- Multiple theme options from daisyUI
+- Automatic application of themes across components
+
 ### AuthInterceptor
 Automatically adds authentication tokens to HTTP requests:
 - Skips GraphQL requests (handled by Apollo)
 - Adds authorization headers to REST API calls
 - Handles token retrieval and management
-
-## Next Steps
-
-1. Complete the standalone components (Dashboard, Admin)
-2. Add shared UI components for consistent design (as standalone components)
-3. Implement proper error handling in the UI with toasts/notifications
-4. Write tests for all services and components
-5. Add documentation for all APIs and components
-6. Consider adding state management for larger applications
 
 ## Best Practices Applied
 
@@ -190,6 +196,9 @@ Automatically adds authentication tokens to HTTP requests:
 6. **Environment Configuration**: Clear separation between development and production
 7. **Standalone Components**: Using Angular's modern component architecture for better performance and maintainability
 8. **Utility-First CSS**: Using Tailwind CSS for consistent, maintainable styling without custom CSS
+9. **Component Library**: Using daisyUI for high-quality, themeable UI components
+10. **Reactive Programming**: Using RxJS for reactive state management
+11. **UI Theming**: Implementing theme switching with persistent user preferences
 
 ## Implemented Architecture Improvements
 
@@ -221,30 +230,32 @@ export class ProfileComponent implements OnInit {
 }
 ```
 
-### Tailwind CSS Integration
-We've integrated Tailwind CSS for a utility-first styling approach:
+### Tailwind CSS and daisyUI Integration
+We've integrated Tailwind CSS with daisyUI for a comprehensive UI approach:
 
-- All components use Tailwind utility classes instead of custom CSS
+- All components use Tailwind and daisyUI utility classes instead of custom CSS
 - Configuration is set up in tailwind.config.js and postcss.config.js
-- Global styles include Tailwind directives
-- Components are styled consistently using Tailwind's design system
+- Global styles include Tailwind directives and daisyUI integration
+- Components are styled consistently using Tailwind's utility classes and daisyUI components
+- Theme switching functionality with persistent preferences is implemented
 
 Benefits of this approach include:
-- Faster UI development with pre-built utility classes
+- Faster UI development with pre-built utility classes and components
 - Consistent design language across components
 - Reduced CSS bundle size through PurgeCSS optimization
 - Better maintainability without custom CSS classes
 - Responsive design out of the box
+- Multiple theme options with easy switching
 
-Example of Tailwind styling:
+Example of daisyUI component usage:
 ```html
-<div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-  <h2 class="text-2xl font-bold mb-6 text-gray-800">User Profile</h2>
-  
-  <div *ngIf="loading" class="text-gray-600">
-    Loading user profile...
+<div class="card bg-base-100 shadow-xl">
+  <div class="card-body">
+    <h2 class="card-title">Card Title</h2>
+    <p>Card content goes here.</p>
+    <div class="card-actions justify-end">
+      <button class="btn btn-primary">Action</button>
+    </div>
   </div>
-  
-  <!-- Form with Tailwind styling -->
 </div>
 ``` 
