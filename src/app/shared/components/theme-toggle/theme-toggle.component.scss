@@ -1,5 +1,11 @@
 // Just for max-height and scrolling
 .dropdown-content {
-  max-height: 70vh;
-  overflow-y: auto;
+  max-height: 80vh;
+  overflow: auto;
+
 } 
+
+// Style for active theme
+li.active {
+  background-color: rgba(var(--p), 0.2);
+}

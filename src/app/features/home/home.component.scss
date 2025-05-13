@@ -1,0 +1,144 @@
+// Enhanced animations for home page elements
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+:host {
+  display: block;
+  animation: fadeIn 0.5s ease-out;
+}
+
+// Hero section enhancements
+.hero {
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(var(--p), 0.1) 0%, rgba(var(--p), 0) 70%);
+    z-index: 0;
+    animation: rotate 60s linear infinite;
+  }
+  
+  .hero-content {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// Stats section enhancements
+.stats {
+  transition: all 0.3s ease;
+  
+  .stat {
+    &:hover {
+      background-color: rgba(var(--b2), 0.7);
+      transform: translateY(-5px);
+      transition: all 0.3s ease;
+    }
+    
+    .stat-figure svg {
+      transition: transform 0.3s ease;
+    }
+    
+    &:hover .stat-figure svg {
+      transform: scale(1.2);
+    }
+  }
+}
+
+// Card enhancements
+app-content-card {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+  }
+  
+  svg {
+    transition: all 0.3s ease;
+  }
+  
+  &:hover svg {
+    transform: scale(1.1);
+  }
+}
+
+// Badge animations
+.badge {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+// Button enhancements
+.btn {
+  &.btn-primary {
+    position: relative;
+    overflow: hidden;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 5px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.5);
+      opacity: 0;
+      border-radius: 100%;
+      transform: scale(1, 1) translate(-50%, -50%);
+      transform-origin: 50% 50%;
+    }
+    
+    &:hover::after {
+      animation: ripple 1s ease-out;
+    }
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(100, 100);
+    opacity: 0;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .hero-content {
+    text-align: center;
+    
+    h1 {
+      font-size: 2.5rem;
+    }
+  }
+  
+  .stats {
+    flex-direction: column;
+  }
+}
+
+// Dark mode enhancements
+:root[data-theme="dark"] {
+  .hero::before {
+    opacity: 0.5;
+  }
+} 

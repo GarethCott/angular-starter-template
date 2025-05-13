@@ -1,95 +1,54 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AmplifyService } from '../../../core/services/amplify.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
-    <div class="login-container">
-      <h2>Login</h2>
-      <div *ngIf="errorMessage" class="error-message">
-        {{ errorMessage }}
-      </div>
-      <form (ngSubmit)="onSubmit()">
-        <div class="form-group">
-          <label for="username">Username</label>
-          <input 
-            type="text" 
-            id="username" 
-            [(ngModel)]="username" 
-            name="username" 
-            required
-          />
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input 
-            type="password" 
-            id="password" 
-            [(ngModel)]="password" 
-            name="password" 
-            required
-          />
-        </div>
-        <button type="submit" [disabled]="isLoading">
-          {{ isLoading ? 'Signing in...' : 'Sign In' }}
-        </button>
-        <div class="register-link">
-          <a routerLink="/register">Don't have an account? Register here</a>
-        </div>
-      </form>
+    <h2 class="text-center text-2xl font-bold mb-5">Sign In</h2>
+    
+    <div *ngIf="errorMessage" class="alert alert-error mb-4">
+      {{ errorMessage }}
     </div>
-  `,
-  styles: [`
-    .login-container {
-      max-width: 400px;
-      margin: 0 auto;
-      padding: 20px;
-    }
     
-    .form-group {
-      margin-bottom: 15px;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 5px;
-    }
-    
-    input {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    
-    button {
-      padding: 10px 15px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    
-    button:disabled {
-      background-color: #cccccc;
-    }
-    
-    .error-message {
-      color: red;
-      margin-bottom: 15px;
-    }
-    
-    .register-link {
-      margin-top: 15px;
-      text-align: center;
-    }
-  `]
+    <form (ngSubmit)="onSubmit()" class="space-y-4">
+      <div class="form-control">
+        <label for="username" class="label">
+          <span class="label-text">Username</span>
+        </label>
+        <input 
+          type="text" 
+          id="username" 
+          [(ngModel)]="username" 
+          name="username" 
+          required
+          class="input input-bordered w-full"
+        />
+      </div>
+      
+      <div class="form-control">
+        <label for="password" class="label">
+          <span class="label-text">Password</span>
+        </label>
+        <input 
+          type="password" 
+          id="password" 
+          [(ngModel)]="password" 
+          name="password" 
+          required
+          class="input input-bordered w-full"
+        />
+      </div>
+      
+      <button type="submit" [disabled]="isLoading" class="btn btn-primary w-full mt-4">
+        {{ isLoading ? 'Signing in...' : 'Sign In' }}
+      </button>
+    </form>
+  `
 })
 export class LoginComponent {
   username = '';

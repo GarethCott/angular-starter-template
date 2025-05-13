@@ -2,67 +2,74 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AmplifyService } from '../../core/services/amplify.service';
 import { CommonModule } from '@angular/common';
+import { PageLayoutComponent, ContentCardComponent } from '../../shared/components/layout';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, PageLayoutComponent, ContentCardComponent],
   template: `
-    <div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 class="text-2xl font-bold mb-6 text-gray-800">User Profile</h2>
-      
-      <div *ngIf="loading" class="text-gray-600">
-        Loading user profile...
-      </div>
-      
-      <div *ngIf="error" class="text-red-500 mb-4">
-        {{ error }}
-      </div>
-      
-      <form *ngIf="profileForm && !loading" [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-6">
-        <div class="space-y-2">
-          <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-          <input 
-            type="text" 
-            id="username" 
-            formControlName="username" 
-            readonly
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 focus:outline-none"
-          >
+    <app-page-layout title="User Profile">
+      <app-content-card>
+        <div *ngIf="loading" class="flex justify-center my-8">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
         </div>
         
-        <div class="space-y-2">
-          <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-          <input 
-            type="email" 
-            id="email" 
-            formControlName="email"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-          <div *ngIf="profileForm.get('email')?.invalid && profileForm.get('email')?.touched" class="text-red-500 text-sm mt-1">
-            Please enter a valid email address.
+        <div *ngIf="error" class="alert alert-error mb-4">
+          {{ error }}
+        </div>
+        
+        <form *ngIf="profileForm && !loading" [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-6">
+          <div class="form-control">
+            <label for="username" class="label">
+              <span class="label-text">Username</span>
+            </label>
+            <input 
+              type="text" 
+              id="username" 
+              formControlName="username" 
+              readonly
+              class="input input-bordered bg-base-200"
+            />
           </div>
-        </div>
-        
-        <div class="space-y-2">
-          <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-          <input 
-            type="text" 
-            id="name" 
-            formControlName="name"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          
+          <div class="form-control">
+            <label for="email" class="label">
+              <span class="label-text">Email</span>
+            </label>
+            <input 
+              type="email" 
+              id="email" 
+              formControlName="email"
+              class="input input-bordered"
+            />
+            <div *ngIf="profileForm.get('email')?.invalid && profileForm.get('email')?.touched" class="label">
+              <span class="label-text-alt text-error">Please enter a valid email address.</span>
+            </div>
+          </div>
+          
+          <div class="form-control">
+            <label for="name" class="label">
+              <span class="label-text">Name</span>
+            </label>
+            <input 
+              type="text" 
+              id="name" 
+              formControlName="name"
+              class="input input-bordered"
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            [disabled]="profileForm.invalid || saving"
+            class="btn btn-primary w-full mt-4"
           >
-        </div>
-        
-        <button 
-          type="submit" 
-          [disabled]="profileForm.invalid || saving"
-          class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md shadow-sm focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {{ saving ? 'Saving...' : 'Save Changes' }}
-        </button>
-      </form>
-    </div>
+            {{ saving ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </form>
+      </app-content-card>
+    </app-page-layout>
   `,
   styles: []
 })

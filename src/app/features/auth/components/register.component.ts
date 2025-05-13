@@ -1,149 +1,99 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AmplifyService } from '../../../core/services/amplify.service';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
-    <div class="register-container">
-      <h2>Register</h2>
-      
-      <div *ngIf="errorMessage" class="error-message">
-        {{ errorMessage }}
-      </div>
-      
-      <div *ngIf="successMessage" class="success-message">
-        {{ successMessage }}
-      </div>
-      
-      <div *ngIf="!showConfirmation">
-        <form (ngSubmit)="onRegister()">
-          <div class="form-group">
-            <label for="username">Username</label>
-            <input 
-              type="text" 
-              id="username" 
-              [(ngModel)]="username" 
-              name="username" 
-              required
-            />
-          </div>
-          
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input 
-              type="email" 
-              id="email" 
-              [(ngModel)]="email" 
-              name="email" 
-              required
-            />
-          </div>
-          
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input 
-              type="password" 
-              id="password" 
-              [(ngModel)]="password" 
-              name="password" 
-              required
-            />
-          </div>
-          
-          <button type="submit" [disabled]="isLoading">
-            {{ isLoading ? 'Registering...' : 'Register' }}
-          </button>
-        </form>
-      </div>
-      
-      <div *ngIf="showConfirmation">
-        <form (ngSubmit)="onConfirm()">
-          <div class="form-group">
-            <label for="code">Confirmation Code</label>
-            <input 
-              type="text" 
-              id="code" 
-              [(ngModel)]="confirmationCode" 
-              name="code" 
-              required
-            />
-            <small>Please check your email for the confirmation code</small>
-          </div>
-          
-          <button type="submit" [disabled]="isConfirming">
-            {{ isConfirming ? 'Confirming...' : 'Confirm Registration' }}
-          </button>
-        </form>
-      </div>
-      
-      <div class="login-link">
-        <a routerLink="/login">Already have an account? Login here</a>
-      </div>
+    <h2 class="text-center text-2xl font-bold mb-5">Create Account</h2>
+    
+    <div *ngIf="errorMessage" class="alert alert-error mb-4">
+      {{ errorMessage }}
     </div>
-  `,
-  styles: [`
-    .register-container {
-      max-width: 400px;
-      margin: 0 auto;
-      padding: 20px;
-    }
     
-    .form-group {
-      margin-bottom: 15px;
-    }
+    <div *ngIf="successMessage" class="alert alert-success mb-4">
+      {{ successMessage }}
+    </div>
     
-    label {
-      display: block;
-      margin-bottom: 5px;
-    }
+    <div *ngIf="!showConfirmation">
+      <form (ngSubmit)="onRegister()" class="space-y-4">
+        <div class="form-control">
+          <label for="username" class="label">
+            <span class="label-text">Username</span>
+          </label>
+          <input 
+            type="text" 
+            id="username" 
+            [(ngModel)]="username" 
+            name="username" 
+            required
+            class="input input-bordered w-full"
+          />
+        </div>
+        
+        <div class="form-control">
+          <label for="email" class="label">
+            <span class="label-text">Email</span>
+          </label>
+          <input 
+            type="email" 
+            id="email" 
+            [(ngModel)]="email" 
+            name="email" 
+            required
+            class="input input-bordered w-full"
+          />
+        </div>
+        
+        <div class="form-control">
+          <label for="password" class="label">
+            <span class="label-text">Password</span>
+          </label>
+          <input 
+            type="password" 
+            id="password" 
+            [(ngModel)]="password" 
+            name="password" 
+            required
+            class="input input-bordered w-full"
+          />
+        </div>
+        
+        <button type="submit" [disabled]="isLoading" class="btn btn-primary w-full mt-4">
+          {{ isLoading ? 'Registering...' : 'Register' }}
+        </button>
+      </form>
+    </div>
     
-    small {
-      display: block;
-      margin-top: 5px;
-      color: #666;
-    }
-    
-    input {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    
-    button {
-      padding: 10px 15px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      width: 100%;
-    }
-    
-    button:disabled {
-      background-color: #cccccc;
-    }
-    
-    .error-message {
-      color: red;
-      margin-bottom: 15px;
-    }
-    
-    .success-message {
-      color: green;
-      margin-bottom: 15px;
-    }
-    
-    .login-link {
-      margin-top: 15px;
-      text-align: center;
-    }
-  `]
+    <div *ngIf="showConfirmation">
+      <form (ngSubmit)="onConfirm()" class="space-y-4">
+        <div class="form-control">
+          <label for="code" class="label">
+            <span class="label-text">Confirmation Code</span>
+          </label>
+          <input 
+            type="text" 
+            id="code" 
+            [(ngModel)]="confirmationCode" 
+            name="code" 
+            required
+            class="input input-bordered w-full"
+          />
+          <label class="label">
+            <span class="label-text-alt">Please check your email for the confirmation code</span>
+          </label>
+        </div>
+        
+        <button type="submit" [disabled]="isConfirming" class="btn btn-primary w-full mt-4">
+          {{ isConfirming ? 'Confirming...' : 'Confirm Registration' }}
+        </button>
+      </form>
+    </div>
+  `
 })
 export class RegisterComponent {
   username = '';
@@ -207,9 +157,8 @@ export class RegisterComponent {
       .subscribe({
         next: () => {
           this.isConfirming = false;
-          this.successMessage = 'Account confirmed successfully! Redirecting to login...';
-          
-          // Navigate to login after a short delay
+          this.successMessage = 'Account confirmed successfully! You can now login.';
+          // Redirect to login page after a short delay
           setTimeout(() => {
             this.router.navigate(['/login']);
           }, 2000);
@@ -221,7 +170,7 @@ export class RegisterComponent {
           } else if (error.code === 'ExpiredCodeException') {
             this.errorMessage = 'Confirmation code has expired';
           } else {
-            this.errorMessage = 'Confirmation failed. Please try again.';
+            this.errorMessage = 'Failed to confirm account. Please try again.';
             console.error('Confirmation error:', error);
           }
         }
